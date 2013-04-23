@@ -51,7 +51,8 @@ class Sil_Disable_Items_Plugin
 	 */
 	function edit_nav_menu_walker( $walker ) {
 		//@TODO this should be loaded somewhere sooner... 
-		require_once WP_PLUGIN_DIR . '/sil-disable-menu-items/tocka-nav-menu-walker.php';
+		// require_once WP_PLUGIN_DIR . '/silencesoft-disable-menu-items/tocka-nav-menu-walker.php';
+		require_once 'tocka-nav-menu-walker.php';
 		
 		// swap the menu walker class only if it's the default wp class (just in case)
 		if ( $walker === 'Walker_Nav_Menu_Edit' ) {
@@ -85,7 +86,6 @@ class Sil_Disable_Items_Plugin
 		foreach ( $items as $item )
 		{
 			$dis = get_post_meta( $item->ID, 'sil_disable_menu_item_test_val' , true);
-			print $dis."?";
 			if ($dis != "1")
 			$new_items[] = $item;
 			
