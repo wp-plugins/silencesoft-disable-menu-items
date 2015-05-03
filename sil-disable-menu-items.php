@@ -2,7 +2,7 @@
 /*
  * Plugin Name: Silencesoft Disable Menu Items 
  * Description: Allow to enable/disable menu items
- * Version: 1.0
+ * Version: 1.1
  * Plugin URI: http://silencesoft.co
  * Author: Byron Herrera
  * Author URI: http://byronh.axul.net
@@ -28,6 +28,14 @@
  * 
  **/
 
+// don't load directly
+if ( !function_exists( 'is_admin' ) ) {
+	header( 'Status: 403 Forbidden' );
+	header( 'HTTP/1.1 403 Forbidden' );
+	exit();
+}
+
+
 if ( !class_exists( "Sil_Disable_Items_Plugin" ) ):
 
 class Sil_Disable_Items_Plugin
@@ -37,10 +45,12 @@ class Sil_Disable_Items_Plugin
 	 * Hook da stuff!
 	 */
 	function __construct() {
-		add_action( 'wp_edit_nav_menu_walker', array( $this, 'edit_nav_menu_walker' ) );
+		add_filter( 'wp_edit_nav_menu_walker', array( $this, 'edit_nav_menu_walker' ),10, 1 );
 		add_action( 'wp_update_nav_menu_item', array( $this, 'sil_disable_update_nav_menu_item' ), 10, 3 );
 		add_filter( 'wp_nav_menu_objects', array( $this, 'sil_nav_menu_items' ) );
 		add_action('plugins_loaded', array( $this, 'sil_plugin_init') );
+		// fix for Walker 
+		add_action( 'wp_nav_menu_item_custom_fields', array( $this, 'sil_custom_fields' ), 10, 4 );
 	}
 
 	
@@ -61,7 +71,12 @@ class Sil_Disable_Items_Plugin
 		return $walker;
 	}
 
-	
+	function sil_custom_fields( $item_id, $item, $depth, $args ) {
+		$test_val = esc_attr( get_post_meta( $item_id, 'sil_disable_menu_item_test_val', TRUE ) );
+		$test_val = ($test_val == "1")?" checked='checked'":'';
+		print "<div class='field-disable description-wide'><input type='checkbox' ".$test_val." value='1' name='sil_disable_menu_item_test_val_".$item_id."' /><span class='description'>".__('Disable menu item', 'sil_disable')."</span></div>";
+	}
+
 	/**
 	 * Save post meta. Menu items are just posts of type "menu_item".
 	 * 
@@ -75,7 +90,6 @@ class Sil_Disable_Items_Plugin
 		if ( isset( $_POST[ "sil_disable_menu_item_test_val_$menu_item_id" ] ) ) {
 			update_post_meta( $menu_item_id, 'sil_disable_menu_item_test_val', $_POST[ "sil_disable_menu_item_test_val_$menu_item_id" ] );
 		} else {
-			#mfmfmf("DEL");
 			delete_post_meta( $menu_item_id, 'sil_disable_menu_item_test_val' );
 		}
 	}
@@ -87,7 +101,7 @@ class Sil_Disable_Items_Plugin
 		{
 			$dis = get_post_meta( $item->ID, 'sil_disable_menu_item_test_val' , true);
 			if ($dis != "1")
-			$new_items[] = $item;
+				$new_items[] = $item;
 			
 		}
 		return $new_items;
